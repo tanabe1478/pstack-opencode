@@ -1,0 +1,7 @@
+---
+description: "Bring a project's formal verification back in line with the code after the code changes: find the commits that touched verified code, update the model, harness, or properties to describe the code as it is now, rerun, and say whether each failure is drift in the verification or a bug in the code. Use for /maintain-formal-verification-skill, \"is the model still true to the code\", or after merges and refactors that touched verified code without rechecking it."
+---
+
+Use the `skill` tool with id `maintain-formal-verification-skill`, then follow that skill for this request.
+
+$ARGUMENTS

@@ -1,0 +1,17 @@
+{
+  "name": "pstack-opencode",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenCode port of pstack: rigorous agent workflows, role-based model routing, commands, and subagents.",
+  "license": "MIT",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "2.1.3",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

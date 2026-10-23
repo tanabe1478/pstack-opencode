@@ -1,0 +1,7 @@
+---
+description: "Catch the user up on what changed in this chat since their last message, in plain words and small visuals. List every item waiting on them with what they need to decide it from the reply alone. Use for /ketchup."
+---
+
+Use the `skill` tool with id `ketchup`, then follow that skill for this request.
+
+$ARGUMENTS
