@@ -1,37 +1,37 @@
 # pstack for OpenCode
 
-Lauren Tan（poteto）の [pstack](https://github.com/cursor/plugins/tree/main/pstack) を OpenCode 向けに移植したものです。[michael-denyer/pstack-claude](https://github.com/michael-denyer/pstack-claude) の Claude Code 版を土台に、OpenCode のコマンド、サブエージェント、モデルルーティング、自動ルーティングに合わせて作り直しています。
+An OpenCode port of [pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan (poteto). It builds on Michael Denyer's Claude Code version, [michael-denyer/pstack-claude](https://github.com/michael-denyer/pstack-claude), and reworks it for OpenCode commands, subagents, model routing, and automatic routing.
 
-pstack は「速く進みたいなら、まず深く潜れ」という方針のエージェント・ワークフロー集です。コードを増やすのではなく、減らしながら検証された変更だけを残すことを狙います。`poteto-mode` がタスクに合うプレイブックを選び、必要なスキルを呼び出します。
+pstack is a collection of agent workflows built on the idea "if you want to go fast, go deep first." Rather than adding code, it aims to remove code while keeping only verified changes. `poteto-mode` picks the playbook that fits the task and calls the skills it needs.
 
-## Claude Code 版との違い
+## Differences from the Claude Code version
 
-Claude Code 版はスキルを `~/.agents/skills/` に置くだけで OpenCode でも読めますが、次のものは提供していません。
+The Claude Code version works on OpenCode as long as the skills are in `~/.agents/skills/`, but it does not provide the following:
 
-- `/poteto-mode` などのスラッシュコマンド
-- `poteto-agent`、`comment-sicko`、thermo-nuclear レビュアーのサブエージェント定義
-- ロールごとのモデルルーティング
-- セッション開始時の自動ルーティング
+- Slash commands such as `/poteto-mode`
+- Subagent definitions for `poteto-agent`, `comment-sicko`, and the thermo-nuclear reviewers
+- Per-role model routing
+- Automatic routing at session start
 
-この移植では、それらを OpenCode の仕組みで追加しています。
+This port adds them using OpenCode's mechanisms.
 
-| 機能 | Claude Code 版 | この移植 |
+| Feature | Claude Code version | This port |
 | --- | --- | --- |
-| スキル | `skills/` | `~/.config/opencode/skills/` |
-| コマンド | スキルが `/pstack:<name>` になる | `commands/<name>.md` が `/<name>` になる |
-| サブエージェント | `pstack:poteto-agent` | `poteto-agent` |
-| モデル指定 | `Agent` の `model` | ロール別エージェントに固定 |
-| 自動ルーティング | SessionStart フック | OpenCode プラグインの `context` フック |
-| モデル設定 | `~/.claude/pstack-models.md` | `~/.config/opencode/pstack-models.md` |
+| Skills | `skills/` | `~/.config/opencode/skills/` |
+| Commands | Skills become `/pstack:<name>` | `commands/<name>.md` becomes `/<name>` |
+| Subagents | `pstack:poteto-agent` | `poteto-agent` |
+| Model selection | `Agent`'s `model` | Fixed per role agent |
+| Automatic routing | SessionStart hook | OpenCode plugin's `context` hook |
+| Model configuration | `~/.claude/pstack-models.md` | `~/.config/opencode/pstack-models.md` |
 
-## 必要環境
+## Requirements
 
-- OpenCode 2.1.3 以降
+- OpenCode 2.1.3 or later
 - `git`
-- PR ワークフローを使う場合は GitHub CLI（`gh`）
-- `watch-pr` や `orch` を使う場合は Bun
+- GitHub CLI (`gh`) if you use the PR workflow
+- Bun if you use `watch-pr` or `orch`
 
-## インストール
+## Install
 
 ```sh
 git clone https://github.com/<your-name>/pstack-opencode.git
@@ -39,56 +39,56 @@ cd pstack-opencode
 ./install.sh
 ```
 
-グローバル設定（`~/.config/opencode`）にスキル、コマンド、エージェント、プラグインをリンクします。既存ファイルは上書きしません。
+This links skills, commands, agents, and plugins into the global configuration (`~/.config/opencode`). Existing files are not overwritten.
 
-プロジェクト単位で入れたい場合:
+To install per project:
 
 ```sh
 cd /path/to/project
 /path/to/pstack-opencode/install.sh --project
 ```
 
-`./.opencode/` にリンクします。プロジェクト設定はグローバル設定より優先されます。
+This links into `./.opencode/`. Project configuration takes precedence over global configuration.
 
-コピーで入れたい場合:
+To install by copying:
 
 ```sh
 ./install.sh --copy
 ```
 
-`XDG_CONFIG_HOME` を使っている場合は、その配下の `opencode` が対象になります。明示したい場合は `OPENCODE_CONFIG_DIR` を設定してください。
+If you use `XDG_CONFIG_HOME`, the `opencode` directory under it is the target. Set `OPENCODE_CONFIG_DIR` to be explicit.
 
-インストール後に OpenCode を再起動するか、新しいセッションを開始してください。
+After installing, restart OpenCode or start a new session.
 
-### 最初の設定
+### First-time setup
 
 ```text
 /setup-pstack
 ```
 
-`opencode models` で利用可能なモデルを検出し、ロールごとのモデルを `~/.config/opencode/pstack-models.md` に書き込みます。モデルを分けなくても動きますが、パネル（`arena`、`architect`、`interrogate`）は異なるモデルにすると効果的です。
+This detects available models with `opencode models` and writes per-role models to `~/.config/opencode/pstack-models.md`. pstack works without splitting models, but panels (`arena`, `architect`, `interrogate`) are more effective when they use different models.
 
-## 使い方
-
-```text
-/poteto-mode 検索フィルタがページ変更でリセットされるバグを直して
-```
-
-`poteto-mode` がタスクに合うプレイブックを選び、必要に応じて `how`、`why`、`architect`、`arena`、`interrogate`、`swarm` などを呼び出します。
-
-直接スキルを呼ぶこともできます。
+## Usage
 
 ```text
-/how 実行のキャンセルはどう動く？ N+1 はある？
-/interrogate このPRをレビューして
-/tdd このバグを再現するテストを先に書いて
+/poteto-mode Fix the bug where search filters reset when the page changes
 ```
 
-コマンド一覧は [docs/reference.md](docs/reference.md) にあります。
+`poteto-mode` picks the playbook that fits the task and calls `how`, `why`, `architect`, `arena`, `interrogate`, `swarm`, and others as needed.
 
-### todo を使う
+You can also call skills directly.
 
-OpenCode の todo ツールを有効にすると、`poteto-mode` がプレイブックの手順を todo として管理します。
+```text
+/how How does canceling a run work? Is there an N+1?
+/interrogate Review this PR
+/tdd Write a test that reproduces this bug first
+```
+
+The command list is in [docs/reference.md](docs/reference.md).
+
+### Using todos
+
+Enable OpenCode's todo tool and `poteto-mode` manages the playbook steps as todos.
 
 ```jsonc
 {
@@ -99,13 +99,13 @@ OpenCode の todo ツールを有効にすると、`poteto-mode` がプレイブ
 }
 ```
 
-有効にしない場合は `.audit/<task-slug>.todo.md` にチェックリストを書きます。
+If you do not enable it, the checklist is written to `.audit/<task-slug>.todo.md`.
 
-## モデルルーティング
+## Model routing
 
-Claude Code の `Agent` ツールは `model` を受け取れますが、OpenCode の `subagent` ツールはエージェントIDだけを受け取ります。そこで pstack はロールごとに専用のサブエージェントを用意し、プラグインが `pstack-models.md` の値をそのエージェントの `model` に適用します。
+Claude Code's `Agent` tool accepts `model`, but OpenCode's `subagent` tool accepts only an agent ID. pstack therefore provides a dedicated subagent for each role, and the plugin applies the value from `pstack-models.md` to that agent's `model`.
 
-例:
+Example:
 
 ```markdown
 feature, refactoring: anthropic/claude-sonnet-4-5
@@ -117,94 +117,94 @@ default effort: high
 session hook: on
 ```
 
-- `provider/model` は OpenCode のモデル参照です。
-- `#high` のようにモデルバリアントを指定できます。
-- `inherit-parent` または `auto` は親セッションのモデルを使います。
-- パネルはカンマ区切りで、先頭から `pstack-panel-1` から `pstack-panel-4` に対応します。
-- `session hook: off` で自動ルーティングを止められます。
+- `provider/model` is an OpenCode model reference.
+- You can specify a model variant, such as `#high`.
+- `inherit-parent` or `auto` uses the parent session's model.
+- Panels are comma-separated; the first entry maps to `pstack-panel-1` through the fourth to `pstack-panel-4`.
+- `session hook: off` stops automatic routing.
 
-ロールとエージェントの対応は [skills/poteto-mode/references/opencode-tools.md](skills/poteto-mode/references/opencode-tools.md#role-agents) にあります。
+The role-to-agent mapping is in [skills/poteto-mode/references/opencode-tools.md](skills/poteto-mode/references/opencode-tools.md#role-agents).
 
-`pstack-models.md` を編集すると、次のプロンプトでプラグインが変更を検出して反映します。
+When you edit `pstack-models.md`, the plugin detects the change and applies it on the next prompt.
 
-## サブエージェント
+## Subagents
 
-| エージェント | 用途 |
+| Agent | Purpose |
 | --- | --- |
-| `poteto-agent` | 汎用の実装代行 |
-| `pstack-feature` | 機能追加・リファクタリング |
-| `pstack-bug-fix` | バグ修正 |
-| `pstack-perf` | パフォーマンス問題 |
-| `pstack-hillclimb` | メトリクスの継続改善 |
-| `pstack-judgment` | 判断・文章 |
-| `pstack-strongest` | 最も難しい判断 |
-| `pstack-how-*` | `how` の調査・説明 |
-| `pstack-why-*` | `why` の調査・統合 |
-| `pstack-reflect-*` | `reflect` のレビュー |
-| `pstack-panel-1` から `pstack-panel-4` | `arena`、`architect`、`interrogate` のパネル |
-| `pstack-swarm-worker` | `swarm` のワーカー |
-| `comment-sicko` | コメント削除レビュー（読み取り専用） |
-| `thermo-nuclear-review-subagent` | バグ・セキュリティ監査（読み取り専用） |
-| `thermo-nuclear-code-quality-review-subagent` | 保守性監査（読み取り専用） |
+| `poteto-agent` | General implementation delegate |
+| `pstack-feature` | Feature work and refactoring |
+| `pstack-bug-fix` | Bug fixes |
+| `pstack-perf` | Performance issues |
+| `pstack-hillclimb` | Continuous metric improvement |
+| `pstack-judgment` | Judgment and prose |
+| `pstack-strongest` | Hardest judgment calls |
+| `pstack-how-*` | `how` exploration and explanation |
+| `pstack-why-*` | `why` investigation and synthesis |
+| `pstack-reflect-*` | `reflect` review |
+| `pstack-panel-1` through `pstack-panel-4` | Panels for `arena`, `architect`, `interrogate` |
+| `pstack-swarm-worker` | `swarm` workers |
+| `comment-sicko` | Comment-removal review (read-only) |
+| `thermo-nuclear-review-subagent` | Bug and security audit (read-only) |
+| `thermo-nuclear-code-quality-review-subagent` | Maintainability audit (read-only) |
 
-読み取り専用エージェントは `edit` を拒否します。`poteto-agent` と実装系のロールだけがファイルを編集できます。
+Read-only agents reject `edit`. Only `poteto-agent` and the implementation role agents can edit files.
 
-## 自動ルーティング
+## Automatic routing
 
-プラグインが各モデルリクエストのシステムプロンプトに短い指示を追加します。
+The plugin adds a short instruction to the system prompt of every model request. It prompts loading `poteto-mode` when the task matches:
 
-- 複数ファイルに触る変更
-- 共有シグネチャの変更
-- 設計・アーキテクチャの判断
-- 原因不明のバグ
-- パフォーマンス問題
+- Changes that touch multiple files
+- Changes to shared signatures
+- Design or architecture decisions
+- Bugs with an unknown cause
+- Performance issues
 
-に該当するとき、`poteto-mode` を読み込むよう促します。小さいタスクは直接進めます。
+Small tasks proceed directly.
 
-止めたい場合は `pstack-models.md` に次を書きます。
+To turn it off, add the following to `pstack-models.md`:
 
 ```text
 session hook: off
 ```
 
-## モデルを変えたとき
+## Changing models
 
-`/setup-pstack` を再実行するか、`pstack-models.md` を直接編集してください。プラグインがファイルの変更を検出して、次のプロンプトでロールエージェントに適用します。
+Rerun `/setup-pstack`, or edit `pstack-models.md` directly. The plugin detects the file change and applies it to the role agents on the next prompt.
 
-## アンインストール
+## Uninstall
 
 ```sh
 ./uninstall.sh
 ```
 
-このチェックアウトへのシンボリックリンクだけを削除します。コピーで入れた場合や、強制的に消す場合:
+This removes only the symlinks into this checkout. For copy installs or to force removal:
 
 ```sh
 ./uninstall.sh --force
 ```
 
-`~/.config/opencode/pstack-models.md` は `--force` を付けたときだけ削除します。
+`~/.config/opencode/pstack-models.md` is removed only with `--force`.
 
-## 構成
+## Layout
 
 ```text
-skills/                      65 スキル（41 公開 + 24 principles）
-commands/                    公開スキルごとの /<name> コマンド
-agents/                      pstack のサブエージェント
-plugins/pstack.ts            モデル適用と自動ルーティング
-hooks/session-start.md       自動ルーティングの本文
-examples/pstack-models.md    モデル設定の雛形
-install.sh                   グローバル / プロジェクトへのインストーラ
+skills/                      65 skills (41 public + 24 principles)
+commands/                    /<name> command for each public skill
+agents/                      pstack subagents
+plugins/pstack.ts            Model application and automatic routing
+hooks/session-start.md       Automatic routing mandate text
+examples/pstack-models.md    Model configuration template
+install.sh                   Global / project installer
 ```
 
-## 既知の制約
+## Known limitations
 
-- OpenCode の `subagent` にモデル指定はありません。ロールごとにエージェントを分けて対応しています。
-- パネル用の 4 エージェントは `arena`、`architect`、`interrogate` で共有です。`arena runners`、`architect runners`、`interrogate reviewers`、`arena cross-judge pool` の順に調べ、最初に実モデルが入っているリストを使います。3 つのロールに別々のリストを書いた場合、すべて `inherit-parent` でない最初のロールが優先されます。同じリストを書くか、`pstack-panel-*` エージェントを直接編集してください。
-- OpenCode のサブエージェントは既定で 1 階層までです。`poteto-mode` の親チャットがすべての spawn を持ちます。
-- `SessionStart` フックは OpenCode にないため、`context` フックで毎リクエスト注入します。
-- 自動ルーティングは全エージェントに効きますが、`poteto-agent`、`pstack-*`、`comment-sicko`、thermo-nuclear の各エージェントには注入しません。
+- OpenCode's `subagent` has no model parameter. This port addresses that by splitting agents per role.
+- The four panel agents are shared by `arena`, `architect`, and `interrogate`. pstack checks `arena runners`, `architect runners`, `interrogate reviewers`, then `arena cross-judge pool`, and uses the first list that contains a real model. If you write different lists for the three roles, the first role that is not entirely `inherit-parent` wins. Write the same list, or edit the `pstack-panel-*` agents directly.
+- OpenCode subagents are one level deep by default. The parent chat that loaded `poteto-mode` owns every spawn.
+- OpenCode has no `SessionStart` hook, so the mandate is injected on every request through the `context` hook.
+- Automatic routing applies to every agent, but it is not injected into `poteto-agent`, `pstack-*`, `comment-sicko`, or the thermo-nuclear agents.
 
-## ライセンスと帰属
+## License and attribution
 
-MIT。元の pstack は Lauren Tan（poteto）、Claude Code 版は Michael Denyer、cursor-team-kit と thermos の一部は Cursor によるものです。詳細は [NOTICE.md](NOTICE.md)、[LICENSE](LICENSE)、[LICENSE-cursor-team-kit](LICENSE-cursor-team-kit)、[LICENSE-thermos](LICENSE-thermos) を参照してください。
+MIT. The original pstack is by Lauren Tan (poteto), the Claude Code version is by Michael Denyer, and parts of cursor-team-kit and thermos are by Cursor. See [NOTICE.md](NOTICE.md), [LICENSE](LICENSE), [LICENSE-cursor-team-kit](LICENSE-cursor-team-kit), and [LICENSE-thermos](LICENSE-thermos) for details.
